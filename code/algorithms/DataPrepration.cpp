@@ -1,154 +1,80 @@
 #include "DataPrepration.h"
-#include <dirent.h>
+#include <fstream>
+#include <sstream>
 #include <iostream>
-#include <cstdlib>
-#include <cstring>
+#include <algorithm>
+#include <unordered_set>
 
-Graph::Graph() : node_count(0), circle_count(0) {
-    nodes.resize(MAX_NODES);
-    circles.resize(MAX_NODES, 0);
-}
+MetisGraph* prepare_metis_graph(const std::string& file_path, InteractionType it) {
+    MetisGraph* mg = new MetisGraph();
+    std::ifstream file(file_path);
+    std::unordered_map<int, std::vector<int>> adj_list;
+    std::unordered_set<int> unique_nodes;
 
-UserData::UserData() : graph(nullptr) {
-    ego_features.resize(MAX_FEATURES, 0);
-    featnames.resize(MAX_FEATURES);
-}
-
-UserData::~UserData() {
-    if (graph) delete graph;
-}
-
-void add_edge(Graph* g, int u, int v) {
-    if (!g || u >= MAX_NODES || v >= MAX_NODES) return;
-    if (g->nodes[u].id == 0) {
-        g->nodes[u].id = u;
-        g->node_count++;
+    if (!file) {
+        std::cerr << "ERROR: Failed to open " << file_path << "\n";
+        return mg;
     }
-    if (g->nodes[v].id == 0) {
-        g->nodes[v].id = v;
-        g->node_count++;
-    }
-    g->nodes[u].neighbors.push_back(v);
-}
 
-UserData* load_user_data(const std::string& ego_id) {
-    UserData* ud = new UserData();
-    ud->user_id = ego_id;
-    ud->graph = new Graph();
-
-    std::string edges_file = "twitter_data/" + ego_id + ".edges";
-    FILE* file = fopen(edges_file.c_str(), "r");
-    if (file) {
-        char line[MAX_LINE];
-        while (fgets(line, MAX_LINE, file)) {
+    std::string line;
+    if (it == SOCIAL) {
+        // Parse edgelist with two columns: userA userB
+        while (std::getline(file, line)) {
+            std::istringstream iss(line);
             int u, v;
-            if (sscanf(line, "%d %d", &u, &v) == 2) {
-                add_edge(ud->graph, u, v);
+            if (iss >> u >> v) {
+                adj_list[u].push_back(v);
+                unique_nodes.insert(u);
+                unique_nodes.insert(v);
+                // No timestamp for SOCIAL, so we don’t add to mg->timestamps
             }
         }
-        fclose(file);
-    }
-
-    std::string circles_file = "twitter_data/" + ego_id + ".circles";
-    file = fopen(circles_file.c_str(), "r");
-    if (file) {
-        int circle_idx = 0;
-        char line[MAX_LINE];
-        while (fgets(line, MAX_LINE, file)) {
-            char* token = strtok(line, " \t");
-            token = strtok(NULL, " \t");
-            while (token) {
-                int member = atoi(token);
-                if (member < MAX_NODES) ud->graph->circles[member] = circle_idx;
-                token = strtok(NULL, " \t");
-            }
-            circle_idx++;
-        }
-        ud->graph->circle_count = circle_idx;
-        fclose(file);
-    }
-
-    std::string egofeat_file = "twitter_data/" + ego_id + ".egofeat";
-    file = fopen(egofeat_file.c_str(), "r");
-    if (file) {
-        char line[MAX_LINE];
-        fgets(line, MAX_LINE, file);
-        char* token = strtok(line, " \t");
-        while (token) {
-            int idx = atoi(token);
-            if (idx < MAX_FEATURES) ud->ego_features[idx] = 1;
-            token = strtok(NULL, " \t");
-        }
-        fclose(file);
-    }
-
-    std::string feat_file = "twitter_data/" + ego_id + ".feat";
-    file = fopen(feat_file.c_str(), "r");
-    if (file) {
-        char line[MAX_LINE];
-        while (fgets(line, MAX_LINE, file)) {
-            int node_id;
-            if (sscanf(line, "%d", &node_id) == 1 && node_id < MAX_NODES) {
-                char* token = strtok(line, " \t");
-                token = strtok(NULL, " \t");
-                while (token) {
-                    int idx = atoi(token);
-                    if (idx < MAX_FEATURES) ud->graph->nodes[node_id].features[idx] = 1;
-                    token = strtok(NULL, " \t");
+    } else {
+        // Parse activity file with four columns: userA userB timestamp interaction
+        while (std::getline(file, line)) {
+            int u, v, timestamp;
+            std::string interaction;
+            std::istringstream iss(line);
+            if (iss >> u >> v >> timestamp >> interaction) {
+                // Filter based on interaction type
+                if ((it == RETWEET && interaction == "RT") ||
+                    (it == REPLY && interaction == "RE") ||
+                    (it == MENTION && interaction == "MT")) {
+                    adj_list[u].push_back(v);
+                    unique_nodes.insert(u);
+                    unique_nodes.insert(v);
+                    mg->timestamps.push_back(timestamp);
                 }
             }
         }
-        fclose(file);
     }
 
-    std::string featnames_file = "twitter_data/" + ego_id + ".featnames";
-    file = fopen(featnames_file.c_str(), "r");
-    if (file) {
-        int feat_idx = 0;
-        char line[MAX_LINE];
-        while (fgets(line, MAX_LINE, file) && feat_idx < MAX_FEATURES) {
-            int idx;
-            if (sscanf(line, "%d %s", &idx, line) == 2 && idx < MAX_FEATURES) {
-                ud->featnames[idx] = std::string(line);
-                feat_idx++;
+    // Create ID mapping (sorted)
+    std::vector<int> sorted_nodes(unique_nodes.begin(), unique_nodes.end());
+    std::sort(sorted_nodes.begin(), sorted_nodes.end());
+    idx_t idx = 0;
+    for (int node : sorted_nodes) {
+        mg->id_map[node] = idx++;
+    }
+    mg->nvtxs = sorted_nodes.size();
+
+    // Build METIS adjacency arrays
+    mg->xadj.push_back(0);
+    for (int node : sorted_nodes) {
+        if (adj_list.find(node) != adj_list.end()) {
+            for (int neighbor : adj_list[node]) {
+                mg->adjncy.push_back(mg->id_map[neighbor]);
+                mg->nedges++;
             }
         }
-        fclose(file);
+        mg->xadj.push_back(mg->adjncy.size());
     }
 
-    std::cout << "Prepared data for user " << ego_id << ": " << ud->graph->node_count << " nodes, " << ud->graph->circle_count << " circles\n";
-    return ud;
+    std::cout << "Loaded " << file_path << ": " << mg->nvtxs << " nodes, " 
+              << mg->nedges << " edges\n";
+    return mg;
 }
 
-std::vector<std::string> get_user_ids() {
-    std::vector<std::string> user_ids;
-    DIR* dir = opendir("twitter_data");
-    if (!dir) {
-        std::cout << "Error opening directory\n";
-        exit(1);
-    }
-    struct dirent* entry;
-    while ((entry = readdir(dir)) != NULL) {
-        if (strstr(entry->d_name, ".edges")) {
-            std::string user_id = entry->d_name;
-            user_id = user_id.substr(0, user_id.size() - 6);
-            user_ids.push_back(user_id);
-        }
-    }
-    closedir(dir);
-    return user_ids;
-}
-
-void simulate_actions(Graph* g, const std::vector<double>& friendship_factors) {
-    if (!g) return;
-    srand(time(NULL));
-    for (int u = 0; u < MAX_NODES; u++) {
-        if (g->nodes[u].id == 0) continue;
-        for (size_t i = 0; i < g->nodes[u].neighbors.size(); i++) {
-            float r = static_cast<float>(rand()) / RAND_MAX;
-            if (r < friendship_factors[0]) g->nodes[u].action_weight = friendship_factors[0];  // retweet
-            else if (r < friendship_factors[0] + friendship_factors[1]) g->nodes[u].action_weight = friendship_factors[1];  // comment
-            else g->nodes[u].action_weight = friendship_factors[2];  // tag
-        }
-    }
+void free_metis_graph(MetisGraph* g) {
+    delete g;
 }
