@@ -3,42 +3,21 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <metis.h>
 
-#define MAX_NODES 81306  // Twitter dataset nodes
-#define MAX_FEATURES 1113  // Feature vector length
-#define MAX_CIRCLES 100
-#define MAX_USERS 1000
-#define MAX_LINE 1000
+enum InteractionType { RETWEET, REPLY, MENTION, SOCIAL, ACTIVITY };
 
-struct Node {
-    int id;
-    std::vector<int> neighbors;
-    std::vector<int> features;
-    double action_weight;
-    Node() : id(0), action_weight(0.0) {
-        features.resize(MAX_FEATURES, 0);
-    }
+struct MetisGraph {
+    std::vector<idx_t> xadj;     // METIS adjacency pointers
+    std::vector<idx_t> adjncy;   // METIS adjacency list
+    std::unordered_map<int, idx_t> id_map; // Original ID → METIS index
+    idx_t nvtxs = 0;             // Number of vertices
+    idx_t nedges = 0;            // Number of edges
+    std::vector<time_t> timestamps; // Timestamps for temporal analysis (optional)
 };
 
-struct Graph {
-    std::vector<Node> nodes;
-    int node_count;
-    std::vector<int> circles;
-    int circle_count;
-    Graph();
-};
+MetisGraph* prepare_metis_graph(const std::string& file_path, InteractionType it);
+void free_metis_graph(MetisGraph* g);
 
-struct UserData {
-    std::string user_id;
-    Graph* graph;
-    std::vector<int> ego_features;
-    std::vector<std::string> featnames;
-    UserData();
-    ~UserData();
-};
-
-std::vector<std::string> get_user_ids();
-UserData* load_user_data(const std::string& ego_id);
-void simulate_actions(Graph* g, const std::vector<double>& friendship_factors);
-void add_edge(Graph* g, int u, int v);
 #endif

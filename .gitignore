@@ -5,3 +5,7 @@ code/algorithms/twitter data/higgs-retweet_network.edgelist
 .gitignore
 code/algorithms/twitter data/higgs-social_network.edgelist
 code/algorithms/twitter data/higgs-reply_network.edgelist
+code/algorithms/a
+.vscode/settings.json
+code/algorithms/data_prepration
+code/algorithms/data_prepration
