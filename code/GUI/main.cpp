@@ -1,7 +1,6 @@
 #include <iostream>
 #include <omp.h>
 #include <mpi.h>
-#include <metis.h>
 #include <SFML/Graphics.hpp>
 
 int main(int argc, char** argv) {
@@ -19,20 +18,6 @@ int main(int argc, char** argv) {
         #pragma omp critical
         std::cout << "OpenMP: Thread " << tid << " says hello\n";
     }
-
-    // --- METIS Test (partition small graph)
-    idx_t nVertices = 4, nEdges = 4;
-    idx_t xadj[5] = {0, 2, 3, 5, 6}; // adjacency structure
-    idx_t adjncy[6] = {1, 2, 3, 0, 3, 2};
-    idx_t nparts = 2;
-    idx_t part[4];
-    idx_t objval;
-
-    int status = METIS_PartGraphKway(&nVertices, nullptr, xadj, adjncy,
-                                     nullptr, nullptr, nullptr, &nparts,
-                                     nullptr, nullptr, nullptr, &objval, part);
-    if (rank == 0)
-        std::cout << "METIS: Partitioning done with objval = " << objval << "\n";
 
     // --- SFML Window
     if (rank == 0) {
@@ -55,3 +40,10 @@ int main(int argc, char** argv) {
     MPI_Finalize();
     return 0;
 }
+// Compile with: mpicxx -fopenmp -o main main.cpp -lsfml-graphics -lsfml-window -lsfml-system
+// Run with: mpirun -np 4 ./main
+
+//or
+//compile: g++ -fopenmp -o combined_test combined_test.cpp -lsfml-graphics -lsfml-window -lsfml-system -lmpi
+//run: mpirun -np 4 ./combined_test
+// This code combines MPI, OpenMP, and SFML to demonstrate a simple parallel program.
