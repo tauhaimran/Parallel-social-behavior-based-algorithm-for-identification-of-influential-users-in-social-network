@@ -1,4 +1,4 @@
-/code/algorithms/twitter_data
+/code/algorithms/twitter
 code/algorithms/twitter data/higgs-mention_network.edgelist
 .gitignore
 code/algorithms/twitter data/higgs-retweet_network.edgelist
