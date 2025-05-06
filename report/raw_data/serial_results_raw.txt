@@ -1,0 +1,407 @@
+NUM_NODES = 2000  # Reduced number of users
+SOCIAL_EDGES = 50000  # Target number of follower edges (average degree ~50)
+INTERACTION_EDGES = 10000  # Target number of retweet/reply/mention edges per type (average degree ~10)
+
+Verification passed: Influential users are valid
+Selected 10 seeds
+Selected seeds: 590 1008 748 1792 717 536 1289 843 979 1265 
+
+Node 590 Parameters:
+  Followers: 25 (Total Weight: 25)
+  Retweets: 4 (Total Weight: 25)
+  Replies: 4 (Total Weight: 15)
+  Mentions: 6 (Total Weight: 35)
+  Interests: health religion food movies sports education gaming travel politics music tech art 
+  Influence Power: 0.000501255
+  Community ID: 0
+Node 1008 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 9 (Total Weight: 51)
+  Replies: 9 (Total Weight: 37)
+  Mentions: 3 (Total Weight: 15)
+  Interests: health movies nature finance tech food religion sports art gaming science fashion 
+  Influence Power: 0.0005397
+  Community ID: 161
+Node 748 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 9 (Total Weight: 42)
+  Replies: 6 (Total Weight: 16)
+  Mentions: 5 (Total Weight: 34)
+  Interests: health history religion tech nature art food 
+  Influence Power: 0.000512483
+  Community ID: 36
+Node 1792 Parameters:
+  Followers: 28 (Total Weight: 28)
+  Retweets: 10 (Total Weight: 61)
+  Replies: 4 (Total Weight: 17)
+  Mentions: 7 (Total Weight: 27)
+  Interests: music history gaming tech religion movies literature science nature finance fashion sports 
+  Influence Power: 0.000578542
+  Community ID: 884
+Node 717 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 5 (Total Weight: 24)
+  Replies: 1 (Total Weight: 3)
+  Mentions: 7 (Total Weight: 53)
+  Interests: movies religion art science literature history finance sports travel 
+  Influence Power: 0.000508284
+  Community ID: 0
+Node 536 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 4 (Total Weight: 18)
+  Replies: 6 (Total Weight: 46)
+  Mentions: 9 (Total Weight: 56)
+  Interests: literature movies travel nature education fashion history art gaming science religion music 
+  Influence Power: 0.00051919
+  Community ID: 0
+Node 1289 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 6 (Total Weight: 34)
+  Replies: 7 (Total Weight: 28)
+  Mentions: 6 (Total Weight: 23)
+  Interests: science movies education travel nature politics history 
+  Influence Power: 0.000522799
+  Community ID: 397
+Node 843 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 6 (Total Weight: 38)
+  Replies: 10 (Total Weight: 66)
+  Mentions: 5 (Total Weight: 23)
+  Interests: health sports education fashion food travel music movies religion science 
+  Influence Power: 0.000547091
+  Community ID: 0
+Node 979 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 4 (Total Weight: 30)
+  Replies: 6 (Total Weight: 39)
+  Mentions: 10 (Total Weight: 55)
+  Interests: tech art sports gaming health fashion religion food politics literature science history 
+  Influence Power: 0.000522761
+  Community ID: 0
+Node 1265 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 7 (Total Weight: 34)
+  Replies: 7 (Total Weight: 42)
+  Mentions: 3 (Total Weight: 18)
+  Interests: art politics science nature gaming health sports history travel 
+  Influence Power: 0.000540107
+  Community ID: 374
+
+Data initialization time: 184 ms
+
+Total execution time(without data loading time): 4861 ms
+
+#############################################################################################################################################
+
+#############################################################################################################################################
+
+#############################################################################################################################################
+
+
+
+
+
+# Parameters
+NUM_NODES = 4000  # Reduced number of users
+SOCIAL_EDGES = 100000  # Target number of follower edges (average degree ~50)
+INTERACTION_EDGES = 20000  # Target number of retweet/reply/mention edges per type (average degree ~10)
+Verification passed: Influential users are valid
+Selected 10 seeds
+Selected seeds: 1266 187 1859 3184 1440 2652 743 363 647 3126 
+
+Node 1266 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 7 (Total Weight: 48)
+  Replies: 8 (Total Weight: 52)
+  Mentions: 8 (Total Weight: 49)
+  Interests: politics finance science literature gaming education food tech health travel 
+  Influence Power: 0.000259417
+  Community ID: 0
+Node 187 Parameters:
+  Followers: 25 (Total Weight: 25)
+  Retweets: 6 (Total Weight: 19)
+  Replies: 4 (Total Weight: 24)
+  Mentions: 3 (Total Weight: 23)
+  Interests: education health movies food art finance nature politics gaming 
+  Influence Power: 0.000247124
+  Community ID: 0
+Node 1859 Parameters:
+  Followers: 25 (Total Weight: 25)
+  Retweets: 3 (Total Weight: 17)
+  Replies: 4 (Total Weight: 10)
+  Mentions: 8 (Total Weight: 58)
+  Interests: gaming movies food religion nature education music politics tech 
+  Influence Power: 0.000241388
+  Community ID: 429
+Node 3184 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 10 (Total Weight: 66)
+  Replies: 7 (Total Weight: 36)
+  Mentions: 6 (Total Weight: 39)
+  Interests: gaming science travel art music education sports food history nature 
+  Influence Power: 0.000260296
+  Community ID: 1683
+Node 1440 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 5 (Total Weight: 37)
+  Replies: 12 (Total Weight: 66)
+  Mentions: 6 (Total Weight: 36)
+  Interests: movies nature finance tech art literature politics fashion science religion 
+  Influence Power: 0.000273325
+  Community ID: 140
+Node 2652 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 6 (Total Weight: 27)
+  Replies: 4 (Total Weight: 26)
+  Mentions: 6 (Total Weight: 22)
+  Interests: music science movies sports finance education politics travel art literature history religion 
+  Influence Power: 0.000277471
+  Community ID: 1160
+Node 743 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 5 (Total Weight: 40)
+  Replies: 0 (Total Weight: 0)
+  Mentions: 5 (Total Weight: 28)
+  Interests: literature politics tech history health art fashion food science 
+  Influence Power: 0.000260377
+  Community ID: 0
+Node 363 Parameters:
+  Followers: 22 (Total Weight: 22)
+  Retweets: 3 (Total Weight: 17)
+  Replies: 3 (Total Weight: 10)
+  Mentions: 6 (Total Weight: 23)
+  Interests: gaming food movies tech sports travel finance nature 
+  Influence Power: 0.000217854
+  Community ID: 0
+Node 647 Parameters:
+  Followers: 25 (Total Weight: 25)
+  Retweets: 4 (Total Weight: 28)
+  Replies: 6 (Total Weight: 26)
+  Mentions: 4 (Total Weight: 30)
+  Interests: science tech health literature nature food travel gaming art movies 
+  Influence Power: 0.000248727
+  Community ID: 0
+Node 3126 Parameters:
+  Followers: 25 (Total Weight: 25)
+  Retweets: 11 (Total Weight: 59)
+  Replies: 3 (Total Weight: 19)
+  Mentions: 10 (Total Weight: 58)
+  Interests: history music politics tech food nature sports movies finance gaming art 
+  Influence Power: 0.000253512
+  Community ID: 1626
+
+Data initialization time: 228 ms
+
+Total execution time(without data loading time): 10826 ms
+
+
+
+
+
+
+
+############################################################################################################################
+
+############################################################################################################################
+
+############################################################################################################################
+
+
+
+NUM_NODES = 6000  # Reduced number of users
+SOCIAL_EDGES = 150000  # Target number of follower edges (average degree ~50)
+INTERACTION_EDGES = 40000  # Target number of retweet/reply/mention edges per type (average degree ~10)
+
+Verification passed: Influential users are valid
+Selected 10 seeds
+Selected seeds: 4517 2239 2318 682 647 4396 2458 1953 3132 828 
+
+Node 4517 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 9 (Total Weight: 47)
+  Replies: 9 (Total Weight: 43)
+  Mentions: 12 (Total Weight: 79)
+  Interests: science health education history religion travel music movies literature fashion art 
+  Influence Power: 0.000178643
+  Community ID: 2279
+Node 2239 Parameters:
+  Followers: 24 (Total Weight: 24)
+  Retweets: 5 (Total Weight: 21)
+  Replies: 7 (Total Weight: 28)
+  Mentions: 3 (Total Weight: 18)
+  Interests: travel literature politics history fashion food religion health movies 
+  Influence Power: 0.000159531
+  Community ID: 0
+Node 2318 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 5 (Total Weight: 29)
+  Replies: 8 (Total Weight: 40)
+  Mentions: 5 (Total Weight: 30)
+  Interests: literature sports politics movies fashion finance education tech music nature 
+  Influence Power: 0.000179608
+  Community ID: 0
+Node 682 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 8 (Total Weight: 40)
+  Replies: 7 (Total Weight: 36)
+  Mentions: 11 (Total Weight: 69)
+  Interests: sports nature religion fashion art movies finance music education food 
+  Influence Power: 0.000179027
+  Community ID: 0
+Node 647 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 9 (Total Weight: 57)
+  Replies: 11 (Total Weight: 70)
+  Mentions: 10 (Total Weight: 73)
+  Interests: science tech health literature nature food travel gaming art movies 
+  Influence Power: 0.000180817
+  Community ID: 0
+Node 4396 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 13 (Total Weight: 67)
+  Replies: 10 (Total Weight: 59)
+  Mentions: 11 (Total Weight: 55)
+  Interests: nature health art finance fashion religion politics history movies travel sports 
+  Influence Power: 0.000180204
+  Community ID: 2161
+Node 2458 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 7 (Total Weight: 36)
+  Replies: 7 (Total Weight: 36)
+  Mentions: 6 (Total Weight: 31)
+  Interests: sports music fashion science history education finance literature gaming tech movies 
+  Influence Power: 0.000181271
+  Community ID: 395
+Node 1953 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 5 (Total Weight: 40)
+  Replies: 8 (Total Weight: 45)
+  Mentions: 9 (Total Weight: 57)
+  Interests: health science fashion religion gaming travel history literature art food 
+  Influence Power: 0.000180047
+  Community ID: 0
+Node 3132 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 15 (Total Weight: 93)
+  Replies: 6 (Total Weight: 29)
+  Mentions: 6 (Total Weight: 17)
+  Interests: gaming health nature travel tech religion finance education movies sports history music 
+  Influence Power: 0.000182471
+  Community ID: 943
+Node 828 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 8 (Total Weight: 29)
+  Replies: 13 (Total Weight: 61)
+  Mentions: 6 (Total Weight: 26)
+  Interests: education science literature tech politics sports religion health art music food 
+  Influence Power: 0.000183797
+  Community ID: 0
+
+Data initialization time: 401 ms
+
+Total execution time(without data loading time): 20083 ms
+
+
+
+
+
+############################################################################################################################
+
+############################################################################################################################
+
+############################################################################################################################
+
+# Parameters
+NUM_NODES = 8000  # Reduced number of users
+SOCIAL_EDGES = 200000  # Target number of follower edges (average degree ~50)
+INTERACTION_EDGES = 60000  # Target number of retweet/reply/mention edges per type (average degree ~10)
+
+
+Verification passed: Influential users are valid
+Selected 10 seeds
+Selected seeds: 806 5875 3734 3552 2104 53 979 3120 933 4255 
+
+Node 806 Parameters:
+  Followers: 22 (Total Weight: 22)
+  Retweets: 7 (Total Weight: 28)
+  Replies: 6 (Total Weight: 39)
+  Mentions: 5 (Total Weight: 16)
+  Interests: science finance food nature religion movies history literature art 
+  Influence Power: 0.000110163
+  Community ID: 0
+Node 5875 Parameters:
+  Followers: 28 (Total Weight: 28)
+  Retweets: 11 (Total Weight: 49)
+  Replies: 10 (Total Weight: 57)
+  Mentions: 16 (Total Weight: 90)
+  Interests: education literature art movies tech science politics history religion fashion 
+  Influence Power: 0.000138561
+  Community ID: 3447
+Node 3734 Parameters:
+  Followers: 28 (Total Weight: 28)
+  Retweets: 6 (Total Weight: 30)
+  Replies: 10 (Total Weight: 53)
+  Mentions: 7 (Total Weight: 29)
+  Interests: literature sports science nature gaming education food art politics travel music 
+  Influence Power: 0.0001402
+  Community ID: 1349
+Node 3552 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 7 (Total Weight: 26)
+  Replies: 8 (Total Weight: 51)
+  Mentions: 9 (Total Weight: 39)
+  Interests: politics movies nature tech religion travel art finance fashion health literature 
+  Influence Power: 0.000134179
+  Community ID: 1185
+Node 2104 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 8 (Total Weight: 41)
+  Replies: 8 (Total Weight: 39)
+  Mentions: 10 (Total Weight: 58)
+  Interests: religion nature sports art history fashion gaming food education science movies 
+  Influence Power: 0.000134772
+  Community ID: 0
+Node 53 Parameters:
+  Followers: 24 (Total Weight: 24)
+  Retweets: 8 (Total Weight: 43)
+  Replies: 7 (Total Weight: 32)
+  Mentions: 4 (Total Weight: 24)
+  Interests: politics sports health nature tech gaming food history 
+  Influence Power: 0.00012099
+  Community ID: 0
+Node 979 Parameters:
+  Followers: 26 (Total Weight: 26)
+  Retweets: 8 (Total Weight: 42)
+  Replies: 7 (Total Weight: 46)
+  Mentions: 10 (Total Weight: 85)
+  Interests: tech art sports gaming health fashion religion food politics literature science history 
+  Influence Power: 0.000130554
+  Community ID: 0
+Node 3120 Parameters:
+  Followers: 25 (Total Weight: 25)
+  Retweets: 10 (Total Weight: 52)
+  Replies: 9 (Total Weight: 51)
+  Mentions: 12 (Total Weight: 80)
+  Interests: science movies sports art education fashion finance nature religion 
+  Influence Power: 0.00012229
+  Community ID: 799
+Node 933 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 14 (Total Weight: 68)
+  Replies: 9 (Total Weight: 66)
+  Mentions: 11 (Total Weight: 69)
+  Interests: literature tech fashion sports finance art food gaming travel movies history music 
+  Influence Power: 0.000137929
+  Community ID: 0
+Node 4255 Parameters:
+  Followers: 27 (Total Weight: 27)
+  Retweets: 14 (Total Weight: 79)
+  Replies: 7 (Total Weight: 35)
+  Mentions: 8 (Total Weight: 38)
+  Interests: movies finance religion literature education travel tech sports food nature 
+  Influence Power: 0.000135241
+  Community ID: 1845
+
+Data initialization time: 533 ms
+
+Total execution time(without data loading time): 33695 ms
