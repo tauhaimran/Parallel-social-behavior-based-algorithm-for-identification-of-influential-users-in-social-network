@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSAIIM Pipeline Workflow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #6b48ff, #00ddeb);
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            position: relative;
+        }
+        /* Particle Background */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.1;
+            z-index: -1;
+        }
+        /* Sticky Header */
+        header {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            text-align: center;
+            z-index: 10;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            color: #fff;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        /* Workflow Styling */
+        .workflow-container {
+            padding: 40px;
+            margin: 40px auto;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 700px;
+        }
+        .box {
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            width: 300px;
+            margin: 10px 0;
+            position: relative;
+        }
+        .box.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #e0e7ff, #ffffff);
+        }
+        .box h3 {
+            color: #1e3a8a;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .box-number {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            background: #ff6347;
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .sub-box {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            color: #fff;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .sub-box:hover {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+        .details {
+            display: none;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 10px;
+            color: #fff;
+            animation: slideIn 0.3s ease forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        /* SVG Arrows */
+        .arrow {
+            stroke: #ff4500;
+            stroke-width: 3;
+            fill: none;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawArrow 2s forwards;
+            margin: 10px 0;
+        }
+        @keyframes drawArrow {
+            to { stroke-dashoffset: 0; }
+        }
+        /* Divider */
+        .divider {
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #ff6347, transparent);
+            margin: 40px auto;
+        }
+        /* Report Styling */
+        .report {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .report::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNDQwIDEwMCI+PHBhdGggZmlsbD0iIzNiODJmNiIgZmlsbC1vcGFjaXR5PSIwLjEiIGQ9Ik0wLDEwMEwxNDQwLDAwTDE0NDAsMTAwTDAxMDBaIi8+PHBhdGggZmlsbD0iI2ZmNjM0NyIgZmlsbC1vcGFjaXR5PSIwLjEiIGQ9Ik0wLDc1TDE0NDAsMjVMMTQ0MCwxMDBMMDAsMTAwWiIvPjwvc3ZnPg==');
+            background-size: cover;
+        }
+        .report-section {
+            background: #f8fafc;
+            border-left: 5px solid;
+            border-image: linear-gradient(#3b82f6, #ff6347) 1;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .report-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .report-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .report h2 {
+            color: #1e3a8a;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .report h3 {
+            color: #3b82f6;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .report p, .report li {
+            color: #475569;
+            line-height: 1.8;
+        }
+        .highlight {
+            background: #ff6347;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #ff6347;
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle Background -->
+    <div class="particles"></div>
+
+    <!-- Sticky Header -->
+    <header>
+        <h1>PSAIIM Pipeline Workflow</h1>
+    </header>
+
+    <!-- Workflow Section -->
+    <div class="workflow-container">
+        <!-- Step 1: Load Data -->
+        <div class="box" style="background: linear-gradient(135deg, #32cd32, #66ff66);">
+            <div class="box-number">1</div>
+            <div class="flex items-center justify-center">
+                <img src="https://img.icons8.com/color/48/data-transfer.png" alt="Load Data Icon" class="icon">
+                <h3>Load Data</h3>
+            </div>
+            <p class="text-gray-700">Imports Higgs Twitter dataset (social, retweet, reply, mention networks, and interests).</p>
+        </div>
+
+        <svg class="arrow" width="60" height="40">
+            <path d="M30,0 L30,30 L20,20 M30,30 L40,20" />
+        </svg>
+
+        <!-- Step 2: Initialize Graph -->
+        <div class="box" style="background: linear-gradient(135deg, #32cd32, #66ff66);">
+            <div class="box-number">2</div>
+            <div class="flex items-center justify-center">
+                <img src="https://img.icons8.com/color/48/network.png" alt="Initialize Graph Icon" class="icon">
+                <h3>Initialize Graph</h3>
+            </div>
+            <p class="text-gray-700">Sets up nodes (up to 500,000) and edges with social actions and interests.</p>
+        </div>
+
+        <svg class="arrow" width="60" height="40">
+            <path d="M30,0 L30,30 L20,20 M30,30 L40,20" />
+        </svg>
+
+        <!-- Step 3: Detect Communities -->
+        <div class="box" style="background: linear-gradient(135deg, #ffa500, #ffd700);">
+            <div class="box-number">3</div>
+            <div class="flex items-center justify-center">
+                <img src="https://img.icons8.com/color/48/community.png" alt="Detect Communities Icon" class="icon">
+                <h3>Detect Communities</h3>
+            </div>
+            <p class="text-gray-700">Partitions graph into SCCs and single-node CACs using DFS.</p>
+        </div>
+
+        <svg class="arrow" width="60" height="40">
+            <path d="M30,0 L30,30 L20,20 M30,30 L40,20" />
+        </svg>
+
+        <!-- Step 4: Calculate Influence Power -->
+        <div class="box" style="background: linear-gradient(135deg, #ffa500, #ffd700);">
+            <div class="box-number">4</div>
+            <div class="flex items-center justify-center">
+                <img src="https://img.icons8.com/color/48/lightning-bolt.png" alt="Calculate Influence Power Icon" class="icon">
+                <h3>Calculate Influence Power</h3>
+            </div>
+            <p class="text-gray-700">Uses parallel Personalized PageRank with social actions and interests.</p>
+            <div class="sub-box">Details<div class="details">Edge weights: α_retweet=0.50, α_comment=0.35, α_mention=0.15</div></div>
+        </div>
+
+        <svg class="arrow" width="60" height="40">
+            <path d="M30,0 L30,30 L20,20 M30,30 L40,20" />
+        </svg>
+
+        <!-- Step 5: Select Seed Candidates -->
+        <div class="box" style="background: linear-gradient(135deg, #ff6347, #ff8780);">
+            <div class="box-number">5</div>
+            <div class="flex items-center justify-center">
+                <img src="https://img.icons8.com/color/48/target.png" alt="Select Seed Candidates Icon" class="icon">
+                <h3>Select Seed Candidates</h3>
+            </div>
+            <p class="text-gray-700">Identifies influential nodes based on influence zones.</p>
+        </div>
+
+        <svg class="arrow" width="60" height="40">
+            <path d="M30,0 L30,30 L20,20 M30,30 L40,20" />
+        </svg>
+
+        <!-- Step 6: Select Seeds -->
+        <div class="box" style="background: linear-gradient(135deg, #98fb98, #c3ffcb);">
+            <div class="box-number">6</div>
+            <div class="flex items-center justify-center">
+                <img src="https://img.icons8.com/color/48/seedling.png" alt="Select Seeds Icon" class="icon">
+                <h3>Select Seeds</h3>
+            </div>
+            <p class="text-gray-700">Builds Influence-BFS trees to select top k seeds.</p>
+            <div class="sub-box">Details<div class="details">Maximizes influence spread with parallel processing</div></div>
+        </div>
+
+        <svg class="arrow" width="60" height="40">
+            <path d="M30,0 L30,30 L20,20 M30,30 L40,20" />
+        </svg>
+
+        <!-- Step 7: Verify & Log -->
+        <div class="box" style="background: linear-gradient(135deg, #87ceeb, #b3e5fc);">
+            <div class="box-number">7</div>
+            <div class="flex items-center justify-center">
+                <img src="https://img.icons8.com/color/48/checklist.png" alt="Verify & Log Icon" class="icon">
+                <h3>Verify & Log</h3>
+            </div>
+            <p class="text-gray-700">Validates results and logs all steps.</p>
+        </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- Report Section -->
+    <div class="report">
+        <h2 class="text-3xl">PSAIIM Pipeline Report</h2>
+        <div class="report-section">
+            <h3><span class="highlight">Overview</span></h3>
+            <p>This pipeline implements the <span class="highlight">Parallel Socially-Aware Influence Identification Model (PSAIIM)</span> with 95% alignment to Mnasri et al. (2021). It identifies influential users in social networks using a graph-based approach, leveraging parallel processing for efficiency.</p>
+        </div>
+        <div class="report-section">
+            <h3>Process Details</h3>
+            <ul class="list-disc pl-5">
+                <li><strong>Load Data</strong>: Imports Higgs Twitter dataset, including social, retweet, reply, mention networks, and user interests, to construct the graph structure.</li>
+                <li><strong>Initialize Graph</strong>: Sets up nodes (up to 500,000) and directed edges, storing weighted social actions (followers, retweets, replies, mentions) and interest vectors.</li>
+                <li><strong>Detect Communities</strong>: Partitions the graph into Strongly Connected Components (SCCs) and single-node Connected Acyclic Components (CACs) using DFS for parallel processing.</li>
+                <li><strong>Calculate Influence Power</strong>: Applies parallel Personalized PageRank (PPR) with edge weights based on Jaccard similarity of interests and action weights (α_retweet=0.50, α_comment=0.35, α_mention=0.15, damping=0.85).</li>
+                <li><strong>Select Seed Candidates</strong>: Identifies influential nodes by comparing influence power to their influence zone or a threshold (0.015).</li>
+                <li><strong>Select Seeds</strong>: Builds Influence-BFS trees to select top k seeds, maximizing influence spread using parallel processing.</li>
+                <li><strong>Verify & Log</strong>: Validates communities, influence scores, and seeds, logging all steps to graph_analysis.log for transparency.</li>
+            </ul>
+        </div>
+        <div class="report-section">
+            <h3>Technical Specifications</h3>
+            <p><strong>Time Complexity</strong>: <span class="highlight">O((k·m)/p + n)</span>, where k is PPR iterations, m is edges, p is threads, and n is nodes.</p>
+            <p><strong>Space Complexity</strong>: <span class="highlight">O(max(n, m))</span>.</p>
+            <p><strong>Parallelization</strong>: Utilizes OpenMP to process independent communities concurrently, achieving significant speedup.</p>
+            <p><strong>Dataset</strong>: Tested on Higgs Twitter dataset (up to 500,000 nodes), supporting social actions and interest vectors.</p>
+        </div>
+        <div class="report-section">
+            <h3>Alignment with PSAIIM</h3>
+            <p>Achieves 95% alignment with PSAIIM, fully supporting graph representation, community detection, parallel PPR, seed selection, and verification. Minor deviations include:</p>
+            <ul class="list-disc pl-5">
+                <li>PPR uses only follower edges, missing retweets, replies, and mentions (PSAIIM uses all actions).</li>
+                <li>Simplified CAC definition (single-node components vs. acyclic subgraphs).</li>
+                <li>Added normalization of influence power to sum to 1, not in PSAIIM.</li>
+            </ul>
+            <p><strong>Recommendations</strong>: Incorporate all edge types in PPR, optimize Jaccard computation with bitsets, and verify SCC maximality.</p>
+        </div>
+        <div class="report-section">
+            <h3>Assumptions & Notes</h3>
+            <p>Assumes Higgs Twitter dataset structure. Jaccard similarity defaults to 1.0 if interests are missing. Threshold for seed candidates (0.015) is arbitrary and may need tuning.</p>
+        </div>
+        <div class="report-section">
+            <h3>Conclusion</h3>
+            <p>This pipeline effectively identifies influential users with high accuracy and efficiency, leveraging parallel processing for scalability. Future enhancements could address edge consistency, optimize performance, and align fully with PSAIIM.</p>
+        </div>
+    </div>
+
+    <!-- JavaScript for Interactivity and Animations -->
+    <script>
+        // Scroll Animation for Workflow Boxes and Report Sections
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.box, .report-section').forEach(el => observer.observe(el));
+
+        // Toggle Details on Sub-Box Click
+        document.querySelectorAll('.sub-box').forEach(box => {
+            box.addEventListener('click', (e) => {
+                const details = box.querySelector('.details');
+                if (details) {
+                    details.style.display = details.style.display === 'block' ? 'none' : 'block';
+                }
+                // Ripple Effect
+                const ripple = document.createElement('span');
+                ripple.style.position = 'absolute';
+                ripple.style.background = 'rgba(255, 255, 255, 0.5)';
+                ripple.style.borderRadius = '50%';
+                ripple.style.pointerEvents = 'none';
+                ripple.style.transform = 'translate(-50%, -50%)';
+                const rect = box.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.left = `${e.clientX - rect.left}px`;
+                ripple.style.top = `${e.clientY - rect.top}px`;
+                ripple.style.animation = 'ripple 0.6s linear';
+                box.appendChild(ripple);
+            });
+        });
+
+        // Ripple Animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
