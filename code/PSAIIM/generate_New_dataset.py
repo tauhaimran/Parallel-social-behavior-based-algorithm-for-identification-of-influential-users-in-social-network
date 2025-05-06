@@ -9,9 +9,9 @@ random.seed(42)
 np.random.seed(42)
 
 # Parameters
-NUM_NODES = 4000  # Reduced number of users
-SOCIAL_EDGES = 100000  # Target number of follower edges (average degree ~50)
-INTERACTION_EDGES = 20000  # Target number of retweet/reply/mention edges per type (average degree ~10)
+NUM_NODES = 2000  # Reduced number of users
+SOCIAL_EDGES = 50000  # Target number of follower edges (average degree ~50)
+INTERACTION_EDGES = 10000  # Target number of retweet/reply/mention edges per type (average degree ~10)
 MAX_INTERESTS = 12  # Max interests per user
 MIN_INTERESTS = 7  # Min interests for better clustering
 INTEREST_POOL = [
