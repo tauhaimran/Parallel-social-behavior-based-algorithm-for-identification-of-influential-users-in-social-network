@@ -1,0 +1,8 @@
+
+# Parameters
+NUM_NODES = 2000  # Reduced number of users
+SOCIAL_EDGES = 50000  # Target number of follower edges (average degree ~50)
+INTERACTION_EDGES = 10000  # Target number of retweet/reply/mention edges per type (average degree ~10)
+
+
+"Yar is ka approximately time gpt sy nikalwa lena"

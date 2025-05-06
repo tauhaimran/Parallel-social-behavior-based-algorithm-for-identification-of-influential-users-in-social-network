@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include "graph.h"
+#include "openmp_graph.h"
 
 int main()
 {
