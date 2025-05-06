@@ -217,8 +217,8 @@ openmp_time_ms = 2933           # from openmp_results.csv
 mpi_time_ms = 3102              # from mpi_results.csv
 
 # --- Data for bar chart ---
-labels = ['Serial (2000 users)', 'OpenMP', 'MPI + OpenMP']
-times = [serial_time_ms, openmp_time_ms, mpi_time_ms]
+labels = ['Serial (2000 users)', 'MPI', 'MPI + OpenMP']
+times = [serial_time_ms, mpi_time_ms, openmp_time_ms]
 colors = ['green', 'orange', 'blue']
 
 # --- Plot ---

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSAIIM Project Full Report</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      color: #1f2937;
+    }
+    .container {
+      max-width: 960px;
+      margin: auto;
+      padding: 2rem;
+    }
+    h1, h2, h3 {
+      color: #1e3a8a;
+      font-weight: bold;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-size: 2rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+    h3 {
+      font-size: 1.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .highlight {
+      background: #facc15;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.375rem;
+    }
+    .code-block {
+      background: #e5e7eb;
+      padding: 1rem;
+      font-family: monospace;
+      border-radius: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    img.placeholder {
+      width: 100%;
+      max-width: 600px;
+      margin: 1rem 0;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Parallel Algorithm Implementation and Demonstration</h1>
+    <p><strong>Authors:</strong> Muhammad Tahir (i220821), Sameed Ahmed Siddiqui (i228223), Tauha Imran (I221239)</p>
+
+    <h2>1. Introduction</h2>
+    <h3>Overview of PSAIIM</h3>
+    <p>The <span class="highlight">Parallel Socially-Aware Influence Identification Model (PSAIIM)</span> is designed to detect influential nodes in large-scale social networks such as Twitter. It integrates PageRank and community detection in a distributed setup, leveraging social behavior graphs (retweets, replies, mentions).</p>
+
+    <h3>Motivation for Parallelization</h3>
+    <ul class="list-disc pl-6">
+      <li><strong>Scalability:</strong> Required for large datasets (500K+ nodes).</li>
+      <li><strong>Performance:</strong> Reduces execution time significantly.</li>
+      <li><strong>Toolkit Utilization:</strong> MPI for distributed tasks, OpenMP for shared memory, METIS for partitioning.</li>
+    </ul>
+
+    <h2>2. Implementation Details</h2>
+    <h3>2.1 Parallelization Strategy</h3>
+    <ul class="list-disc pl-6">
+      <li><strong>MPI:</strong> Each process handles one graph partition and synchronizes influence values.</li>
+      <li><strong>OpenMP:</strong> Used for threading within MPI processes to speed up influence calculations and community detection.</li>
+      <li><strong>Hybrid:</strong> Combines both approaches for processor/thread optimization.</li>
+    </ul>
+
+    <h3>2.2 Graph Partitioning with METIS</h3>
+    <p><strong>Partitioning Type:</strong> k-way edge-cut to minimize edge crossing. Integrated into the graph loader module.</p>
+
+    <h3>2.3 Dataset Handling</h3>
+    <ul class="list-disc pl-6">
+      <li><strong>Dataset:</strong> Higgs Twitter network (SNAP) with 500K nodes and 14M+ edges.</li>
+      <li><strong>Preprocessing:</strong> Used Python scripts (<code>generate_New_dataset.py</code>, <code>generate_Reduceddataset_from_Higgs.py</code>), removed duplicates/isolated nodes, reindexed for METIS.</li>
+    </ul>
+
+    <h3>2.4 Technical Workflow Steps</h3>
+    <ol class="list-decimal pl-6">
+      <li><strong>Load Data:</strong> Load social, retweet, reply, mention, and interest data.</li>
+      <li><strong>Initialize Graph:</strong> Up to 500K nodes, weighted edges, assign interest vectors.</li>
+      <li><strong>Detect Communities:</strong> Use DFS to find SCCs and CACs.</li>
+      <li><strong>Calculate Influence Power:</strong> Personalized PageRank using weights: α_retweet=0.50, α_comment=0.35, α_mention=0.15, damping=0.85.</li>
+      <li><strong>Select Seed Candidates:</strong> Based on influence zone I(L), threshold 0.015.</li>
+      <li><strong>Select Seeds:</strong> BFS trees to find top-k nodes.</li>
+      <li><strong>Verify & Log:</strong> Validate results, log steps to <code>graph_analysis.log</code>.</li>
+    </ol>
+
+    <h3>2.5 Complexities</h3>
+    <p><strong>Time:</strong> O((k·m)/p + n), where k = PPR iterations, m = edges, n = nodes, p = threads</p>
+    <p><strong>Space:</strong> O(max(n, m))</p>
+
+    <h2>3. Experimental Setup</h2>
+    <ul class="list-disc pl-6">
+      <li>Cluster of 2-3 laptops, WSL2 Ubuntu 22.04/24.04</li>
+      <li>MPICH 4.1.1, OpenMP with GCC 11.4.0</li>
+      <li>Compiled with: <br/><br/><span class="code-block">mpic++ -fopenmp -O3 main.cpp -o psaiim</span><br/><br/></li>
+      <li>Dependencies: METIS 5.1.0, GTK, matplotlib, PyQt (GUI)</li>
+    </ul>
+
+    <h3>Execution Parameters</h3>
+    <ul class="list-disc pl-6">
+      <li>MPI: 1 to 3 processes</li>
+      <li>OpenMP: 4 threads/process, static scheduling, nested off</li>
+      <li>METIS: 3-way k-cut, 500 iterations</li>
+    </ul>
+
+    <h2>4. Results and Analysis</h2>
+    <h3>Performance Metrics</h3>
+    <ul class="list-disc pl-6">
+      <li>Serial (2000 nodes): 4861 ms</li>
+      <li>OpenMP: 3102 ms (Speedup 1.57×)</li>
+      <li>MPI + OpenMP: 2933 ms (Speedup 1.66×)</li>
+    </ul>
+
+    <h3>Visualizations</h3>
+    <p><strong>Total Runtime Comparison:</strong></p>
+    <img class="placeholder" alt="Bar chart comparing serial, OpenMP, MPI+OpenMP" src="graphs/runtime_performance_comparison.png">
+
+    <p><strong>Serial Scalability:</strong></p>
+    <img class="placeholder" alt="Line chart: nodes vs time in serial" src="graphs/serial_performance.png">
+
+    <p><strong>MPI Initialization & Execution:</strong></p>
+    <img class="placeholder" alt="Bar chart MPI timings" src="graphs/mpi_performance.png">
+
+    <p><strong>MPI + OpenMP Initialization & Execution:</strong></p>
+    <img class="placeholder" alt="Bar chart hybrid timings" src="graphs/mpi+openmp_performance.png">
+
+    <p><strong>Influence Power vs Followers:</strong></p>
+    <img class="placeholder" alt="Scatter plot influence vs followers" src="graphs/Influence Power vs Followers of Influential Users.png">
+
+    <h3>Scalability Discussion</h3>
+    <ul class="list-disc pl-6">
+      <li><strong>Strong Scaling:</strong> Speed increases with more MPI processes up to overhead limits.</li>
+      <li><strong>Weak Scaling:</strong> Maintains performance with larger datasets and more nodes.</li>
+    </ul>
+
+    <h2>5. Discussion</h2>
+    <ul class="list-disc pl-6">
+      <li><strong>Challenges:</strong> Process sync, MPI latency, preprocessing, and complex research.</li>
+      <li><strong>Benefits of METIS:</strong> Balanced workload, minimized edge cuts.</li>
+      <li><strong>Trade-offs:</strong> OpenMP increases memory use but boosts speed.</li>
+      <li><strong>Results:</strong> Consistent accuracy, hybrid gave optimal balance.</li>
+    </ul>
+
+    <h2>6. Conclusion and Future Work</h2>
+    <p><strong>Best Configuration:</strong> MPI + OpenMP (hybrid)</p>
+    <p><strong>Bonus Work:</strong></p>
+    <ul class="list-disc pl-6">
+      <li>Multi-device cluster support</li>
+      <li>Static HTML documentation</li>
+      <li>GUI prototype (in progress)</li>
+    </ul>
+    <img class="placeholder" alt="GUI screenshot" src="screenshots/beta_gui.jpg">
+
+    <p><strong>Future Plans:</strong> GPU-accelerated PageRank (CUDA/OpenCL), Spark pipeline, dynamic load balancing.</p>
+
+    <h2>7. References</h2>
+    <ul class="list-disc pl-6">
+      <li>Original PSAIIM Paper</li>
+      <li><a href="https://snap.stanford.edu/data/">Higgs Dataset (SNAP)</a></li>
+      <li><a href="https://www.openmp.org/">OpenMP Docs</a></li>
+      <li><a href="https://www.mpich.org/">MPICH</a></li>
+      <li><a href="http://glaros.dtc.umn.edu/gkhome/metis/metis/overview">METIS Docs</a></li>
+      <li><a href="https://github.com/tauhaimran/Parallel-social-behavior-based-algorithm-for-identification-of-influential-users-in-social-network">GitHub Repo</a></li>
+    </ul>
+
+    <h2>8. Appendix</h2>
+    <p><strong>MPI Broadcast:</strong></p>
+    <div class="code-block">MPI_Bcast(&global_rank_vector[0], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);</div>
+
+    <p><strong>Run Script:</strong></p>
+    <div class="code-block">mpirun -np 3 ./psaiim input.graph</div>
+  </div>
+</body>
+</html>
