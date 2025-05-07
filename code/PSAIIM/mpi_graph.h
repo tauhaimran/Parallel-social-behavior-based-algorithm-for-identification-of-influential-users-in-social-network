@@ -14,60 +14,57 @@
 #include <functional>
 #include <iomanip>
 #include <mpi.h>
+#define REQUEST_INTERESTS 1
+#define RESPONSE_INTERESTS 2
+#define REQUEST_WEIGHTS 3
+#define RESPONSE_WEIGHTS 4
 
 class Graph {
 private:
-    class Node {
+class Node {
     public:
         long int node_id;
-        std::vector<long int> followers;
-        std::vector<double> followers_weight;
-        std::vector<long int> retweets;
-        std::vector<double> retweet_weight;
-        std::vector<long int> replies;
-        std::vector<double> reply_weight;
-        std::vector<long int> mentions;
-        std::vector<double> mention_weight;
-        double total_followers_weight;
-        double total_retweet_weight;
-        double total_reply_weight;
-        double total_mention_weight;
-        int followers_count;
-        int retweets_count;
-        int replies_count;
-        int mentions_count;
+        std::vector<long int> followers, retweets, replies, mentions;
+        std::vector<double> followers_weight, retweet_weight, reply_weight, mention_weight;
+        long int followers_count, retweets_count, replies_count, mentions_count;
+        double total_followers_weight, total_retweet_weight, total_reply_weight, total_mention_weight;
         std::vector<std::string> interests;
         double influence_power;
         int community_id;
 
-        Node(long int id = 0)
-            : node_id(id), total_followers_weight(0.0), total_retweet_weight(0.0),
-              total_reply_weight(0.0), total_mention_weight(0.0),
-              followers_count(0), retweets_count(0), replies_count(0), mentions_count(0),
-              influence_power(0.0), community_id(-1) {}
+        Node() : node_id(-1), followers_count(0), retweets_count(0), replies_count(0), mentions_count(0),
+                 total_followers_weight(0.0), total_retweet_weight(0.0), total_reply_weight(0.0),
+                 total_mention_weight(0.0), influence_power(0.0), community_id(-1) {}
+
+        Node(long int id) : node_id(id), followers_count(0), retweets_count(0), replies_count(0), mentions_count(0),
+                            total_followers_weight(0.0), total_retweet_weight(0.0), total_reply_weight(0.0),
+                            total_mention_weight(0.0), influence_power(0.0), community_id(-1) {}
 
         void setInterests(const std::vector<std::string>& new_interests) {
             interests = new_interests;
         }
     };
 
-    std::vector<Node> nodes; // Local nodes for this process
-    long int MAX_NODES = 500000;
+    std::vector<Node> nodes;
+    long int MAX_NODES;
     long int local_start, local_end, local_size;
-    int index;
     std::stack<long int> node_stack;
-    std::vector<int> lowlink, level;
+    std::vector<int> lowlink;
+    std::vector<int> level;
     std::vector<bool> on_stack;
     std::vector<std::vector<long int>> communities;
-    const double ALPHA_RETWEET = 0.50;
-    const double ALPHA_COMMENT = 0.35;
-    const double ALPHA_MENTION = 0.15;
-    const double DAMPING_FACTOR = 0.85;
-    const int MAX_ITERATIONS = 100;
-    const double CONVERGENCE_THRESHOLD = 1e-6;
-    const double IP_THRESHOLD = 0.015;
-    std::ofstream log_file;
+    std::vector<int> global_community_id; // New: Global array for community IDs
+    long int index;
     int rank, size;
+    std::ofstream log_file;
+
+    static constexpr double ALPHA_RETWEET = 0.5;
+    static constexpr double ALPHA_COMMENT = 0.3;
+    static constexpr double ALPHA_MENTION = 0.2;
+    static constexpr double DAMPING_FACTOR = 0.85;
+    static constexpr int MAX_ITERATIONS = 100;
+    static constexpr double CONVERGENCE_THRESHOLD = 0.0001;
+    static constexpr double IP_THRESHOLD = 0.01;
 
     struct InfluenceBFSTree {
         long int root;
@@ -76,13 +73,13 @@ private:
         double rank;
     };
 
+
     void log_message(const std::string& message) {
-        if (rank == 0) {
-            log_file << message;
-            std::cout << message;
-        } else {
-            MPI_Send(message.c_str(), message.size() + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-        }
+        if (rank != 0) {
+            MPI_Request req;
+            MPI_Isend(message.c_str(), message.size() + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &req);
+            MPI_Request_free(&req); // Handle completion separately if needed
+        } 
     }
 
     double calculateJaccard(const std::vector<std::string>& interests1, const std::vector<std::string>& interests2) {
@@ -114,9 +111,58 @@ private:
         ss << "Rank " << rank << ": Calculating edge weight for (" << u_x << "," << u_y << ")\n";
         log_message(ss.str());
 
+        // Helper function to fetch interests with proper MPI communication
+        auto fetchInterests = [this](long int node_id) -> std::vector<std::string> {
+            std::vector<std::string> interests;
+            if (node_id >= local_start && node_id < local_end) {
+                return nodes[node_id - local_start].interests;
+            }
+
+            int dest_rank = node_id / (MAX_NODES / size);
+            if (dest_rank >= size) dest_rank = size - 1;
+
+            // Send request
+            MPI_Send(&node_id, 1, MPI_LONG, dest_rank, REQUEST_INTERESTS, MPI_COMM_WORLD);
+            
+            // Get response
+            int interest_count;
+            MPI_Recv(&interest_count, 1, MPI_INT, dest_rank, RESPONSE_INTERESTS, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            
+            std::vector<char> buffer(interest_count * 256);
+            MPI_Recv(buffer.data(), buffer.size(), MPI_CHAR, dest_rank, RESPONSE_INTERESTS, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            
+            std::stringstream ss(std::string(buffer.data()));
+            std::string interest;
+            while (ss >> interest) {
+                interests.push_back(interest);
+            }
+            return interests;
+        };
+
+        auto fetchWeights = [this](long int node_id) -> std::tuple<double, double, double> {
+            if (node_id >= local_start && node_id < local_end) {
+                return {nodes[node_id - local_start].total_retweet_weight,
+                        nodes[node_id - local_start].total_reply_weight,
+                        nodes[node_id - local_start].total_mention_weight};
+            }
+    
+            int dest_rank = node_id / (MAX_NODES / size);
+            if (dest_rank >= size) dest_rank = size - 1;
+    
+            // Send request
+            MPI_Send(&node_id, 1, MPI_LONG, dest_rank, REQUEST_WEIGHTS, MPI_COMM_WORLD);
+            
+            // Get response
+            double weights[3];
+            MPI_Recv(weights, 3, MPI_DOUBLE, dest_rank, RESPONSE_WEIGHTS, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            return {weights[0], weights[1], weights[2]};
+        };
+
         // Fetch interests and weights for u_x and u_y
-        std::vector<std::string> interests_x, interests_y;
-        double retweet_weight_y = 0.0, reply_weight_y = 0.0, mention_weight_y = 0.0;
+        
+        std::vector<std::string> interests_x = fetchInterests(u_x);
+        auto [retweet_weight_y, reply_weight_y, mention_weight_y] = fetchWeights(u_y);
+        std::vector<std::string> interests_y = fetchInterests(u_y);
 
         // Handle u_x interests
         if (u_x >= local_start && u_x < local_end) {
@@ -506,8 +552,10 @@ private:
     }
 
 public:
-    Graph() : index(0), rank(0), size(1) {
+    Graph() : index(0){
         // Defer MPI initialization to initializeMPI()
+        size = 1;
+        rank = 0;
     }
 
     void initializeMPI() {
@@ -546,11 +594,15 @@ public:
             }
     
             log_file << "Top 10 Influential Nodes:\n";
-            auto top_nodes = getTopInfluentialNodes();
-            for (const auto& node : top_nodes) {
-                log_file << "Node " << node.first << ": Influence Power = "
-                         << std::fixed << std::setprecision(6) << node.second
-                         << ", Community ID = " << nodes[node.first - local_start].community_id << "\n";
+            // auto top_nodes = getTopInfluentialNodes();
+            // for (const auto& node : top_nodes) {
+            //     log_file << "Node " << node.first << ": Influence Power = "
+            //              << std::fixed << std::setprecision(6) << node.second
+            //              << ", Community ID = " << nodes[node.first - local_start].community_id << "\n";
+            // }
+            auto top_node = selectSeeds(10);
+            for (long int seed : top_node) {
+                log_file << "Seed Node " << seed << "\n";
             }
     
             log_file << "================================\n";
@@ -560,36 +612,47 @@ public:
     
 
     std::vector<std::pair<long int, double>> getTopInfluentialNodes() {
-        std::vector<std::pair<long int, double>> local_node_influence;
-        local_node_influence.reserve(local_size);
-        for (long int i = local_start; i < local_end; ++i) {
-            local_node_influence.emplace_back(i, nodes[i - local_start].influence_power);
-        }
-        std::vector<double> all_influence(MAX_NODES);
         std::vector<double> local_influence(local_size);
         for (long int i = 0; i < local_size; ++i) {
             local_influence[i] = nodes[i].influence_power;
         }
-        MPI_Allgather(local_influence.data(), local_size, MPI_DOUBLE, all_influence.data(), local_size, MPI_DOUBLE, MPI_COMM_WORLD);
-        std::vector<std::pair<long int, double>> node_influence;
+    
+        // Get sizes from all ranks
+        std::vector<int> recvcounts(size);
+        MPI_Allgather(&local_size, 1, MPI_INT, recvcounts.data(), 1, MPI_INT, MPI_COMM_WORLD);
+    
+        // Calculate displacements
+        std::vector<int> displs(size);
+        displs[0] = 0;
+        for (int i = 1; i < size; ++i) {
+            displs[i] = displs[i-1] + recvcounts[i-1];
+        }
+    
+        // Gather all influences
+        std::vector<double> global_influence(MAX_NODES);
+        MPI_Allgatherv(local_influence.data(), local_size, MPI_DOUBLE,
+                      global_influence.data(), recvcounts.data(), displs.data(), MPI_DOUBLE, MPI_COMM_WORLD);
+    
+        // Create and sort pairs
+        std::vector<std::pair<long int, double>> results;
         for (long int i = 0; i < MAX_NODES; ++i) {
-            node_influence.emplace_back(i, all_influence[i]);
+            results.emplace_back(i, global_influence[i]);
         }
-        std::sort(node_influence.begin(), node_influence.end(),
+        
+        std::sort(results.begin(), results.end(),
             [](const auto& a, const auto& b) { return a.second > b.second; });
-        std::vector<std::pair<long int, double>> top_nodes(node_influence.begin(), 
-            node_influence.begin() + std::min(10, static_cast<int>(node_influence.size())));
+    
+        // Return top 10
+        std::vector<std::pair<long int, double>> top_nodes(
+            results.begin(), 
+            results.begin() + std::min(10, static_cast<int>(results.size()))
+        );
         
-        std::vector<long int> top_node_ids;
-        for (const auto& node : top_nodes) {
-            top_node_ids.push_back(node.first);
-        }
-        verifyInfluentialUsers(top_node_ids, false, 10);
-        
-        if (rank == 0) {
-            log_message("Retrieved top 10 influential nodes\n");
-            std::cout << "Top 10 influential nodes retrieved\n";
-        }
+        // Verification
+        std::vector<long int> top_ids;
+        for (const auto& pair : top_nodes) top_ids.push_back(pair.first);
+        verifyInfluentialUsers(top_ids, false, 10);
+    
         return top_nodes;
     }
 
@@ -635,6 +698,7 @@ public:
         lowlink.resize(MAX_NODES, -1);
         level.resize(MAX_NODES, 0);
         on_stack.resize(MAX_NODES, false);
+        global_community_id.resize(MAX_NODES, -1); // Initialize global_community_id
         for (long int i = 0; i < local_size; ++i) {
             nodes[i] = Node(local_start + i);
         }
@@ -840,7 +904,6 @@ public:
         }
         MPI_Bcast(lowlink.data(), MAX_NODES, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(level.data(), MAX_NODES, MPI_INT, 0, MPI_COMM_WORLD);
-        // Broadcast on_stack using a temporary char array
         std::vector<char> on_stack_buffer(MAX_NODES);
         if (rank == 0) {
             for (long int i = 0; i < MAX_NODES; ++i) {
@@ -851,6 +914,16 @@ public:
         if (rank != 0) {
             for (long int i = 0; i < MAX_NODES; ++i) {
                 on_stack[i] = on_stack_buffer[i] != 0;
+            }
+        }
+
+        // Populate global_community_id
+        global_community_id.assign(MAX_NODES, -1);
+        for (size_t i = 0; i < communities.size(); ++i) {
+            for (long int v : communities[i]) {
+                if (v >= 0 && v < MAX_NODES) {
+                    global_community_id[v] = static_cast<int>(i);
+                }
             }
         }
 
@@ -869,8 +942,8 @@ public:
             for (long int v : communities[i]) {
                 if (v >= local_start && v < local_end) {
                     for (long int w : nodes[v - local_start].followers) {
-                        if (w >= MAX_NODES || w < 0 || nodes[w - local_start].community_id == -1) continue;
-                        if (nodes[w - local_start].community_id != i) {
+                        if (w >= MAX_NODES || w < 0 || global_community_id[w] == -1) continue;
+                        if (global_community_id[w] != static_cast<int>(i)) {
                             local_max_level = std::max(local_max_level, level[w] + 1);
                         }
                     }
@@ -901,15 +974,15 @@ public:
         for (size_t i = 0; i < communities.size(); ++i) {
             if (!is_cac[i]) continue;
             long int v = communities[i][0];
+            if (v < local_start || v >= local_end) continue; // Process only local nodes
             bool merged = false;
             for (long int w : nodes[v - local_start].followers) {
-                if (w >= MAX_NODES || w < 0 || nodes[w - local_start].community_id == -1) continue;
-                int w_comm_id = nodes[w - local_start].community_id;
+                if (w >= MAX_NODES || w < 0 || global_community_id[w] == -1) continue;
+                int w_comm_id = global_community_id[w];
                 if (level[v] == level[w] && !is_cac[w_comm_id] && communities[w_comm_id].size() < 5) {
                     communities[w_comm_id].push_back(v);
-                    if (v >= local_start && v < local_end) {
-                        nodes[v - local_start].community_id = w_comm_id;
-                    }
+                    nodes[v - local_start].community_id = w_comm_id;
+                    global_community_id[v] = w_comm_id;
                     is_cac[i] = false;
                     communities[i].clear();
                     log_message("Merged single-node community " + std::to_string(i) + " into community " + std::to_string(w_comm_id) + "\n");
@@ -919,13 +992,12 @@ public:
             }
             if (!merged) {
                 for (long int u : nodes[v - local_start].followers) {
-                    if (u >= MAX_NODES || u < 0 || nodes[u - local_start].community_id == -1) continue;
-                    int u_comm_id = nodes[u - local_start].community_id;
+                    if (u >= MAX_NODES || u < 0 || global_community_id[u] == -1) continue;
+                    int u_comm_id = global_community_id[u];
                     if (level[v] == level[u] && is_cac[u_comm_id] && communities[u_comm_id].size() < 5) {
                         communities[u_comm_id].push_back(v);
-                        if (v >= local_start && v < local_end) {
-                            nodes[v - local_start].community_id = u_comm_id;
-                        }
+                        nodes[v - local_start].community_id = u_comm_id;
+                        global_community_id[v] = u_comm_id;
                         is_cac[i] = false;
                         communities[i].clear();
                         log_message("Merged single-node community " + std::to_string(i) + " into single-node community " + std::to_string(u_comm_id) + "\n");
@@ -934,6 +1006,18 @@ public:
                 }
             }
         }
+
+        // Synchronize global_community_id across all processes
+        int sendcount = local_end - local_start;
+        std::vector<int> recvcounts(size);
+        MPI_Allgather(&sendcount, 1, MPI_INT, recvcounts.data(), 1, MPI_INT, MPI_COMM_WORLD);
+        std::vector<int> displs(size);
+        displs[0] = 0;
+        for (int i = 1; i < size; ++i) {
+            displs[i] = displs[i-1] + recvcounts[i-1];
+        }
+        MPI_Allgatherv(global_community_id.data() + local_start, sendcount, MPI_INT,
+                       global_community_id.data(), recvcounts.data(), displs.data(), MPI_INT, MPI_COMM_WORLD);
 
         if (rank == 0) {
             communities.erase(
@@ -951,6 +1035,45 @@ public:
     }
 
     void calculateInfluencePower() {
+        auto handleRequests = [this]() {
+            MPI_Status status;
+            int flag;
+            
+            // Handle interest requests
+            MPI_Iprobe(MPI_ANY_SOURCE, REQUEST_INTERESTS, MPI_COMM_WORLD, &flag, &status);
+            if (flag) {
+                long int requested_node;
+                MPI_Recv(&requested_node, 1, MPI_LONG, status.MPI_SOURCE, REQUEST_INTERESTS, MPI_COMM_WORLD, &status);
+                
+                Node& node = nodes[requested_node - local_start];
+                std::stringstream ss;
+                for (const auto& interest : node.interests) {
+                    ss << interest << " ";
+                }
+                std::string data = ss.str();
+                int count = node.interests.size();
+                
+                MPI_Send(&count, 1, MPI_INT, status.MPI_SOURCE, RESPONSE_INTERESTS, MPI_COMM_WORLD);
+                MPI_Send(data.c_str(), data.size() + 1, MPI_CHAR, status.MPI_SOURCE, RESPONSE_INTERESTS, MPI_COMM_WORLD);
+            }
+    
+            // Handle weight requests
+            MPI_Iprobe(MPI_ANY_SOURCE, REQUEST_WEIGHTS, MPI_COMM_WORLD, &flag, &status);
+            if (flag) {
+                long int requested_node;
+                MPI_Recv(&requested_node, 1, MPI_LONG, status.MPI_SOURCE, REQUEST_WEIGHTS, MPI_COMM_WORLD, &status);
+                
+                Node& node = nodes[requested_node - local_start];
+                double weights[3] = {
+                    node.total_retweet_weight,
+                    node.total_reply_weight,
+                    node.total_mention_weight
+                };
+                MPI_Send(weights, 3, MPI_DOUBLE, status.MPI_SOURCE, RESPONSE_WEIGHTS, MPI_COMM_WORLD);
+            }
+        };
+
+
         for (long int i = 0; i < local_size; ++i) {
             nodes[i].influence_power = 1.0 / MAX_NODES;
         }
@@ -988,6 +1111,7 @@ public:
                 std::vector<double> new_ip(MAX_NODES, 0.0);
 
                 for (int iter = 0; iter < MAX_ITERATIONS; ++iter) {
+                    handleRequests();
                     bool converged = true;
                     for (long int u_i : component) {
                         if (u_i >= MAX_NODES || u_i < 0) continue;
@@ -1149,22 +1273,21 @@ public:
     std::vector<long int> selectSeeds(int k) {
         std::vector<long int> seeds;
         std::vector<long int> candidates = selectSeedCandidates();
+        std::vector<double> global_influence(MAX_NODES);
+        std::vector<double> candidate_ip(candidates.size());
+        for (size_t i = 0; i < candidates.size(); ++i) {
+            long int node = candidates[i];
+            if (node >= local_start && node < local_end) {
+                candidate_ip[i] = nodes[node - local_start].influence_power;
+            } else {
+                int dest_rank = node / (MAX_NODES / size);
+                MPI_Recv(&candidate_ip[i], 1, MPI_DOUBLE, dest_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+        }
         std::sort(candidates.begin(), candidates.end(),
-            [this](long int a, long int b) {
-                double ip_a = a >= local_start && a < local_end ? nodes[a - local_start].influence_power : 0.0;
-                double ip_b = b >= local_start && b < local_end ? nodes[b - local_start].influence_power : 0.0;
-                if (a < local_start || a >= local_end) {
-                    int dest_rank = a / (MAX_NODES / size);
-                    if (dest_rank >= size) dest_rank = size - 1;
-                    MPI_Recv(&ip_a, 1, MPI_DOUBLE, dest_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                }
-                if (b < local_start || b >= local_end) {
-                    int dest_rank = b / (MAX_NODES / size);
-                    if (dest_rank >= size) dest_rank = size - 1;
-                    MPI_Recv(&ip_b, 1, MPI_DOUBLE, dest_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                }
-                return ip_a > ip_b;
-            });
+        [&candidate_ip](long int a, long int b) {
+            return candidate_ip[a] > candidate_ip[b];
+        });
         std::set<long int> candidate_set(candidates.begin(), candidates.end());
         std::vector<InfluenceBFSTree> trees;
         log_message("Selecting " + std::to_string(k) + " seeds from " + std::to_string(candidates.size()) + " candidates\n");

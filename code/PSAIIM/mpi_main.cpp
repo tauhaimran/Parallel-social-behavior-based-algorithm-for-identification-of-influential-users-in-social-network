@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Select seeds (e.g., k=5)
-    int k = 5;
+    int k = 10;
     auto seeds = g.selectSeeds(k);
     if (g.getRank() == 0) {
         std::cout << "Selected Seeds:\n";
