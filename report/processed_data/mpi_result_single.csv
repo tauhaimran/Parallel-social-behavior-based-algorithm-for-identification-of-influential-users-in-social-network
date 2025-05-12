@@ -1,0 +1,4 @@
+Metric,OpenMP+MPI (ms)
+Initialization Time,320
+Total Execution Time,3102
+Dataset Size,Serial Execution Time (s)

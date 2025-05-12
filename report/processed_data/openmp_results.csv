@@ -1,3 +1,5 @@
-Metric,Time (ms)
-Initialization Time,314
-Total Execution Time,2933
+NUM_NODES,TOTAL_TIME_MS
+2000,2933
+4000,6520
+6000,12096
+8000,20298

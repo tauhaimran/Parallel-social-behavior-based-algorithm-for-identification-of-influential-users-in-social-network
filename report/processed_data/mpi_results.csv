@@ -1,4 +1,5 @@
-Metric,OpenMP+MPI (ms)
-Initialization Time,320
-Total Execution Time,3102
-Dataset Size,Serial Execution Time (s)
+NUM_NODES,TOTAL_TIME_MS
+"2,000",3102
+"4,000",6895
+"6,000",12791
+"8,000",21457
